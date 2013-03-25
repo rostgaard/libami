@@ -18,6 +18,9 @@
 with Ada.Characters.Latin_1;
 package AMI is
 
+   type AMI_Packet is new String;
+   type AMI_Line is new String;
+
    package Latin_1 renames Ada.Characters.Latin_1;
 
    Line_Termination_String : constant String := (1 => ASCII.CR, 2 => ASCII.LF);
@@ -34,8 +37,9 @@ package AMI is
    AMI_SOCKET_NOT_AUTHENTICATED : exception;
    NOT_IMPLEMENTED              : exception;
 
+   --  type Action_ID is private;
    type Action_ID_Type is mod 2**16;
-
    Null_Action_ID : constant Action_ID_Type := -1;
+private
 
 end AMI;

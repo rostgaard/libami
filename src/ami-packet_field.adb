@@ -14,34 +14,28 @@
 --  <http://www.gnu.org/licenses/>.                                          --
 --                                                                           --
 -------------------------------------------------------------------------------
+with AMI.Packet;
 
-with Ada.Strings.Bounded;
-with Ada.Containers.Doubly_Linked_Lists;
-
-with AMI.Parser;
-
-package AMI.Packet.Field is
-   package Key_String is new
-     Ada.Strings.Bounded.Generic_Bounded_Length (Max => 64);
-
-   package Value_String is new
-     Ada.Strings.Bounded.Generic_Bounded_Length (Max => 256);
-
-   --  TODO: Make private
-   type Field is tagged record
-      Key   : Key_String.Bounded_String;
-      Value : Value_String.Bounded_String;
-   end record;
-
+package body AMI.Packet_Field is
    function Create (Key :   in AMI.Parser.AMI_Key_Type;
-                    Value : in String) return Field;
+                    Value : in String) return Field is
+   begin
+      return (Key   => Key_String.To_Bounded_String (Key'Img),
+              Value => Value_String.To_Bounded_String (Value));
+   end Create;
 
    function Create (Key :   in String;
-                    Value : in String) return Field;
-   --  Constructors.
+                    Value : in String) return Field is
+   begin
+      return (Key   => Key_String.To_Bounded_String (Key),
+              Value => Value_String.To_Bounded_String (Value));
+   end Create;
 
-   function To_AMI_Line (F : in Field) return AMI_Line;
-
-   package Field_List is new Ada.Containers.Doubly_Linked_Lists (Field);
-
-end AMI.Packet.Field;
+   function To_AMI_Line (F : in Field) return AMI_Line is
+   begin
+      return
+        AMI_Line (Key_String.To_String (F.Key) & AMI.Packet.Separator &
+                    Value_String.To_String (F.Value) &
+                    Line_Termination_String);
+   end To_AMI_Line;
+end AMI.Packet_Field;

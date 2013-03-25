@@ -17,19 +17,31 @@
 
 with Ada.Characters.Latin_1;
 
+with AMI.Packet_Field;
+
 package AMI.Packet is
 
-   package Latin_1 renames Ada.Characters.Latin_1;
+   type Instance is abstract tagged limited private;
+   function Action_ID (R : in Instance) return Action_ID_Type;
 
-   type AMI_Packet is new String;
-   type AMI_Line is new String;
+   package Latin_1 renames Ada.Characters.Latin_1;
 
    Line_Termination_String : constant String := Latin_1.CR & Latin_1.LF;
    Separator               : constant String := ": ";
 
    function Next return Action_ID_Type;
 
+   type Response is new Instance with private;
+
 private
    Current_Action_ID : Action_ID_Type := Action_ID_Type'First;
    pragma Atomic (Current_Action_ID);
+
+   type Instance is abstract tagged limited
+      record
+         Action_ID : Action_ID_Type := Null_Action_ID;
+         Fields    : AMI.Packet_Field.Field_List.List;
+      end record;
+
+   type Response is new Instance with null record;
 end AMI.Packet;

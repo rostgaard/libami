@@ -20,18 +20,18 @@ project Tests is
    type Build_Type is ("Debug", "Production");
    Build : Build_Type := External ("BUILDTYPE", "Production");
 
-   Source_Options := ("src", "tests");
+   Source_Options := ("src/tests", "src");
    for Source_Dirs use Source_Options;
 
-   for Main use ("full_test.adb");
+   for Main use ("client_scope.adb");
 
    for Exec_Dir use ".";
 
    case Build is
       when "Production" =>
-         for Object_Dir use "build_production";
+         for Object_Dir use "build";
       when "Debug" =>
-         for Object_Dir use "build_debug";
+         for Object_Dir use "debug";
    end case;
 
    package Ide is

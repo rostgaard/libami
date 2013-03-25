@@ -19,37 +19,12 @@ with Ada.Calendar;
 
 with AMI.Response;
 with AMI.Trace;
-with AMI.Event;
+with Ada.Exceptions;
 
 package body AMI.Client is
    use Ada.Strings.Unbounded;
    use AMI.Trace;
    use GNAT.Sockets;
-
-   Clients : array (Instance_Handle'Range) of aliased Instance;
-   --  Client "storage pool".
-   Next    : Instance_Handle := 1;
-   procedure Dispatch (Client : access Instance;
-                       Packet : in     AMI.Parser.Packet_Type);
-   -------------------
-   --  Parser_Task  --
-   -------------------
-
-   task body Parser_Task is
-      Client : access Instance;
-
-   begin
-      accept Initialize (Target : Instance_Handle) do
-         Client := Clients (Target)'Access;
-      end Initialize;
-
-      while not Client.Shutdown loop
-         Client.Wait_For_Connection (Timeout => 3.0);
-         --  TODO dispatcher code.
-         Dispatch (Client => Client,
-                   Packet => Client.Read_Packet);
-      end loop;
-   end Parser_Task;
 
    ---------------
    --  Connect  --
@@ -58,6 +33,8 @@ package body AMI.Client is
    procedure Connect (Client   : access Instance;
                       Hostname : in     String;
                       Port     : in     Natural) is
+      use Ada.Exceptions;
+
       Context : constant String := Package_Name & ".Connect";
       Address : Sock_Addr_Type (Family_Inet);
       Socket  : Socket_Type;
@@ -89,13 +66,19 @@ package body AMI.Client is
                                Positive'Image (Port),
                              Context);
    exception
-      when others =>
+      when E : GNAT.Sockets.Socket_Error =>
          --  Synchronize the state
          Client.Connected := False;
          Client.Authenticated := False;
          Client.On_Disconnect_Handler.all;
-         raise;
+         AMI.Trace.Error (Context => Context, Message =>
+                          "Failed to connect: " & Exception_Message (E));
    end Connect;
+
+   function Create return Reference is
+   begin
+      return new Instance;
+   end Create;
 
    -----------------
    --  Connected  --
@@ -105,37 +88,6 @@ package body AMI.Client is
    begin
       return Client.Connected;
    end Connected;
-
-   --------------
-   --  Create  --
-   --------------
-
-   function Create (On_Connect    : in Connection_Event_Handler;
-                    On_Disconnect : in Connection_Event_Handler)
-                    return Instance_Handle is
-   begin
-      --  Register the standard handlers.
-      --  AMI.Channel.Event_Handlers.Register_Handlers;
-
-      Clients (Next).Initialized := True;
-      Clients (Next).Server_Greeting := Null_Unbounded_String;
-      Clients (Next).On_Connect_Handler := On_Connect;
-      Clients (Next).On_Disconnect_Handler := On_Disconnect;
-      Clients (Next).Parser.Initialize (Next);
-      Next := Next + 1;
-
-      return Next - 1;
-   end Create;
-
-   --------------
-   --  Create  --
-   --------------
-
-   function Create return Instance_Handle is
-   begin
-      return Create (On_Connect    => Ignore_Event,
-                     On_Disconnect => Ignore_Event);
-   end Create;
 
    ------------------
    --  Disconnect  --
@@ -147,35 +99,14 @@ package body AMI.Client is
    end Disconnect;
 
    ----------------
-   --  Dispatch  --
+   --  Finalize  --
    ----------------
 
-   procedure Dispatch (Client : access Instance;
-                       Packet : in     AMI.Parser.Packet_Type) is
-      Context : constant String := Package_Name & ".Dispatch";
-      use AMI.Parser;
+   procedure Finalize (Obj : in out Instance) is
    begin
-      if Packet.Header.Key = AMI.Parser.Event then
-         --  Notify the local observers.
-         AMI.Observers.Notify (Client.Event_Observers,
-                               AMI.Event.Event_Type'Value
-                                 (To_String (Packet.Header.Value)),
-                               Packet);
-         --  Notify the global observers.
-         AMI.Observers.Notify (AMI.Event.Event_Type'Value
-                               (To_String (Packet.Header.Value)),
-                               Packet);
-      end if;
-   end Dispatch;
-
-   -----------
-   --  Get  --
-   -----------
-
-   function Get (Handle : in Instance_Handle) return access Instance is
-   begin
-      return Clients (Handle)'Access;
-   end Get;
+      Obj.Disconnect;
+      AMI.Trace.Debug ("Finalize (instance) called for Client ");
+   end Finalize;
 
    ----------------
    --  Get_Line  --
@@ -202,6 +133,14 @@ package body AMI.Client is
       return Buffer (Buffer'First .. Buffer'First + Offset - 1);
    end Get_Line;
 
+   ------------------
+   --  Initialize  --
+   ------------------
+
+   procedure Initialize (Obj : in out Instance) is
+   begin
+      AMI.Trace.Debug ("Initialize (instance) called for new client");
+   end Initialize;
    --------------------
    --  Is_Connected  --
    --------------------
@@ -271,7 +210,7 @@ package body AMI.Client is
    ------------
 
    procedure Send (Client : access Instance;
-                   Item   : in AMI.Packet.AMI_Packet) is
+                   Item   : in AMI.AMI_Packet) is
    begin
       Client.Send (String (Item));
    end Send;
@@ -307,7 +246,7 @@ package body AMI.Client is
       end loop;
 
       if not Client.Connected then
-         raise AMI.Client.Timeout;
+         raise AMI.Client.Connection_Timeout;
       end if;
    end Wait_For_Connection;
 end AMI.Client;

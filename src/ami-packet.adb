@@ -17,6 +17,11 @@
 
 package body AMI.Packet is
 
+   function Action_ID (R : in Instance) return Action_ID_Type is
+   begin
+      return R.Action_ID;
+   end Action_ID;
+
    function Next return Action_ID_Type is
    begin
       Current_Action_ID := Action_ID_Type'Succ (Current_Action_ID);

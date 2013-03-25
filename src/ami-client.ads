@@ -15,7 +15,10 @@
 --                                                                           --
 -------------------------------------------------------------------------------
 
+with Ada.Finalization;
 with Ada.Strings.Unbounded;
+with Ada.Unchecked_Deallocation;
+
 with GNAT.Sockets;
 
 with AMI.Packet.Action;
@@ -25,9 +28,9 @@ with AMI.Observers;
 package AMI.Client is
    use AMI.Observers;
 
-   Package_Name    : constant String := "AMI.Client";
+   Package_Name       : constant String := "AMI.Client";
 
-   Timeout         : exception;
+   Connection_Timeout : exception;
 
    type Connection_Event_Handler is not null access procedure;
    --  Parameterless procedure to execute when connection state changes.
@@ -36,24 +39,8 @@ package AMI.Client is
    --  Silently ignore connection state changes.
 
    type Instance is tagged limited private;
-   type Instance_Access is access all Instance;
+   type Reference is access all Instance;
    --  This is the actual client instance.
-
-   type Instance_Handle is private;
-
-   task type Parser_Task is
-      entry Initialize (Target : Instance_Handle);
-   end Parser_Task;
-
-   type Parser_Task_Access is access all Parser_Task;
-
-   function Get (Handle : in Instance_Handle) return access Instance;
-
-   function Create (On_Connect    : in Connection_Event_Handler;
-                    On_Disconnect : in Connection_Event_Handler)
-                    return Instance_Handle;
-
-   function Create return Instance_Handle;
 
    procedure Connect (Client   : access Instance;
                       Hostname : in     String;
@@ -79,7 +66,7 @@ package AMI.Client is
    --  achieve synchronous operation.
 
    procedure Send (Client : access Instance;
-                   Item   : in AMI.Packet.AMI_Packet);
+                   Item   : in AMI.AMI_Packet);
    --  Alternate Send operation - marked for removal.
    pragma Obsolescent (Send, "Please use the primary send instead");
 
@@ -104,7 +91,11 @@ private
 
    type Instance_Handle is new Natural range 1 .. 10;
 
-   type Instance is tagged limited
+   type Rerefence is access Instance;
+
+   function Create return Reference;
+
+   type Instance is new Ada.Finalization.Limited_Controlled with
       record
          Initialized           : Boolean := False;
          Connected             : Boolean := False;
@@ -116,8 +107,14 @@ private
          Channel               : GNAT.Sockets.Stream_Access := null;
          On_Connect_Handler    : Connection_Event_Handler := Ignore_Event;
          On_Disconnect_Handler : Connection_Event_Handler := Ignore_Event;
-         Parser                : Parser_Task;
          Event_Observers       : Event_Listeners;
       end record;
+
+   overriding procedure Initialize (Obj : in out Instance);
+   overriding procedure Finalize (Obj : in out Instance);
+
+   procedure Deallocate is new Ada.Unchecked_Deallocation
+     (Object => Instance,
+      Name   => Reference);
 
 end AMI.Client;

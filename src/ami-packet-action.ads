@@ -22,11 +22,11 @@
 --  [1] http://astbook.asteriskdocs.org/en/2nd_Edition/asterisk-book-html-chunk
 --  [2] https://wiki.asterisk.org/wiki/display/AST/Asterisk+10+AMI+Actions
 
-with AMI.Packet.Field;
+with AMI.Packet_Field;
 with AMI.Parser;
 
 package AMI.Packet.Action is
-   use AMI.Packet.Field;
+   use AMI.Packet_Field;
 
    Not_Implemented : exception;
 
@@ -69,7 +69,7 @@ package AMI.Packet.Action is
    function To_AMI_Packet (R : in Request) return AMI_Packet;
 
    procedure Add_Field (R : in out Request;
-                        F : in     AMI.Packet.Field.Field);
+                        F : in     AMI.Packet_Field.Field);
    --  Add an additional field to the request.
 
    Null_Request : constant Request;
@@ -757,11 +757,9 @@ private
                     C          => 'C',
                     D          => 'D');
 
-   type Request (Asynchronous : Boolean) is tagged limited
+   type Request (Asynchronous : Boolean) is new AMI.Packet.Instance with
       record
          Action           : Valid_Action;
-         Action_ID        : Action_ID_Type := Next;
-         Fields           : Field_List.List;
          Response_Handler : Response_Handler_Type;
       end record;
 

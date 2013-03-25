@@ -20,6 +20,8 @@ include makefile.setup
 all: ami
 
 ami:
+	-mkdir lib
+	-mkdir build
 	gnatmake -P ami_build && touch ami
 
 debug:
