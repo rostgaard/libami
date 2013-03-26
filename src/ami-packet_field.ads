@@ -18,7 +18,7 @@
 with Ada.Strings.Bounded;
 with Ada.Containers.Doubly_Linked_Lists;
 
-with AMI.Parser;
+with AMI.Packet_Keys;
 
 package AMI.Packet_Field is
    package Key_String is new
@@ -33,7 +33,7 @@ package AMI.Packet_Field is
       Value : Value_String.Bounded_String;
    end record;
 
-   function Create (Key :   in AMI.Parser.AMI_Key_Type;
+   function Create (Key :   in AMI.Packet_Keys.Events;
                     Value : in String) return Field;
 
    function Create (Key :   in String;

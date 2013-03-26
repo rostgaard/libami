@@ -34,6 +34,7 @@ package AMI.Observers is
 
    procedure Register (Event   : in     AMI.Event.Event_Type;
                        Handler : in     AMI.Event.Event_Callback);
+   --  Global event listeners.
 
    procedure Register (Listeners :    out Event_Listeners;
                        Event     : in     AMI.Event.Event_Type;
@@ -45,5 +46,8 @@ package AMI.Observers is
    procedure Notify (Listeners : in Event_Listeners;
                      Event     : in AMI.Event.Event_Type;
                      Packet    : in AMI.Parser.Packet_Type);
+
+   Empty_List : constant Event_Listeners :=
+     (others => Callback_Collections.Empty_Vector);
 
 end AMI.Observers;

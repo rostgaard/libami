@@ -20,6 +20,7 @@ with Ada.Calendar;
 with AMI.Response;
 with AMI.Trace;
 with Ada.Exceptions;
+with AMI.Packet_Keys;
 
 package body AMI.Client is
    use Ada.Strings.Unbounded;
@@ -30,7 +31,7 @@ package body AMI.Client is
    --  Connect  --
    ---------------
 
-   procedure Connect (Client   : access Instance;
+   procedure Connect (Client   : in out Instance;
                       Hostname : in     String;
                       Port     : in     Natural) is
       use Ada.Exceptions;
@@ -75,11 +76,6 @@ package body AMI.Client is
                           "Failed to connect: " & Exception_Message (E));
    end Connect;
 
-   function Create return Reference is
-   begin
-      return new Instance;
-   end Create;
-
    -----------------
    --  Connected  --
    -----------------
@@ -88,6 +84,15 @@ package body AMI.Client is
    begin
       return Client.Connected;
    end Connected;
+
+   --------------
+   --  Create  --
+   --------------
+
+   function Create return Reference is
+   begin
+      return new Instance;
+   end Create;
 
    ------------------
    --  Disconnect  --
@@ -139,7 +144,8 @@ package body AMI.Client is
 
    procedure Initialize (Obj : in out Instance) is
    begin
-      AMI.Trace.Debug ("Initialize (instance) called for new client");
+      AMI.Trace.Debug ("Initialize (instance) called for new client" &
+                         Obj.Initialized'Img);
    end Initialize;
    --------------------
    --  Is_Connected  --
@@ -157,6 +163,7 @@ package body AMI.Client is
 
    function Read_Packet (Client : access AMI.Client.Instance)
                          return AMI.Parser.Packet_Type is
+      use AMI.Packet_Keys;
       use AMI.Parser;
       Context        : constant String := Package_Name & ".Read_Packet";
       Current_Pair   : Pair_Type       := Null_Pair;
@@ -186,8 +193,8 @@ package body AMI.Client is
    --  Send  --
    ------------
 
-   procedure Send (Client : access Instance;
-                   Item   : in     String) is
+   procedure Send (Client : in Instance;
+                   Item   : in String) is
    begin
       Client.Wait_For_Connection;
       String'Write (Client.Channel, Item);
@@ -197,7 +204,7 @@ package body AMI.Client is
    --  Send  --
    ------------
 
-   procedure Send (Client : access Instance;
+   procedure Send (Client : in Instance;
                    Item   : in AMI.Packet.Action.Request) is
    begin
       AMI.Response.Subscribe (Item);
@@ -209,7 +216,7 @@ package body AMI.Client is
    --  Send  --
    ------------
 
-   procedure Send (Client : access Instance;
+   procedure Send (Client : in Instance;
                    Item   : in AMI.AMI_Packet) is
    begin
       Client.Send (String (Item));
@@ -219,7 +226,7 @@ package body AMI.Client is
    --  Send  --
    ------------
 
-   function Send (Client : access Instance;
+   function Send (Client : in Instance;
                   Item   : in AMI.Packet.Action.Request)
                   return AMI.Parser.Packet_Type is
    begin
@@ -234,13 +241,16 @@ package body AMI.Client is
    --  Wait_For_Connection  --
    ---------------------------
 
-   procedure Wait_For_Connection (Client  : access Instance;
-                                  Timeout : in     Duration := 3.0) is
+   procedure Wait_For_Connection (Client  : in Instance;
+                                  Timeout : in Duration := 3.0) is
       use Ada.Calendar;
       Absolute_Timeout : constant Time := Clock + Timeout;
    begin
       loop
-         exit when Client.Connected or Clock > Absolute_Timeout;
+         exit when
+           Client.Connected or
+           Clock > Absolute_Timeout or
+           Client.Shutdown;
          delay 0.05;
 
       end loop;

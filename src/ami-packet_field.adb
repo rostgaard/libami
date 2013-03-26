@@ -17,7 +17,7 @@
 with AMI.Packet;
 
 package body AMI.Packet_Field is
-   function Create (Key :   in AMI.Parser.AMI_Key_Type;
+   function Create (Key :   in AMI.Packet_Keys.Events;
                     Value : in String) return Field is
    begin
       return (Key   => Key_String.To_Bounded_String (Key'Img),

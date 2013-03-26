@@ -17,7 +17,9 @@
 with Ada.Containers.Hashed_Maps;
 with Ada.Strings.Unbounded;
 
+with AMI.Packet_Keys;
 package AMI.Parser is
+   use AMI.Packet_Keys;
    use Ada.Strings.Unbounded;
 
    Package_Name : constant String := "AMI.Parser";
@@ -26,161 +28,7 @@ package AMI.Parser is
 
    Key_Not_In_Packet : exception;
 
-   type AMI_Key_Type is
-     (Async,
-      AuthType,
-      Username,
-      Secret,
-      File,
-      Agent,
-      Forcerport,
-      Extension,
-      ConnectedLineNum,
-      Priority,
-      Filename,
-      --  Originate
-      Account,
-      Codecs,
-      --  End Originate
-      --  Redirect
-      ExtraExten,
-      ExtraChannel,
-      ExtraContext,
-      ExtraPriority,
-      --  END Redirect
-      Tone,
-      --  MASQ
-      Clone,
-      CloneState,
-      Original,
-      OriginalState,
-      --  END MASQ
-      Soft,
-      ParkingLot,
-      Class,
-      Domain,
-      ConnectedLineName,
-      Module,
-      Hint,
-      WrapupTime, -- Probably deprecated.
-      ApplicationData,
-      ReloadReason,
-      Channel,
-      CommandID,
-      Command,
-      ResultCode,
-      Result,
-      Registry_Count,
-      Peer_Count,
-      ModuleLoadStatus,
-      ModuleSelection,
-      ModuleCount,
-      BridgedChannel,
-      BridgedUniqueID,
-      Duration,
-      Null_Key,
-      To,
-      From,
-      PT,
-      ReceptionReports,
-      SenderSSRC,
-      PacketsLost,
-      HighestSequence,
-      SequenceNumberCycles,
-      ListItems,
-      LastSR,
-      Event,
-      Response,
-      Message,
-      Ping,
-      Cause_Txt,
-      Channel1,
-      Channel2,
-      CallerID,
-      CallerIDName,
-      Eventlist,
-      Queue,
-      Position,
-      Count,
-      UniqueID,
-      Timeout,
-      UniqueID1,
-      UniqueID2,
-      SSRC,
-      State,
-      Cause,
-      Source,
-      Destination,
-      SrcUniqueID,
-      DestUniqueID,
-      Bridgestate,
-      Application,
-      AppData,
-      Oldname,
-      ObjectName,
-      ChanObjectType,
-      IPaddress,
-      IPport,
-      Dynamic,
-      Natsupport,
-      VideoSupport,
-      TextSupport,
-      ACL,
-      RealtimeDevice,
-      Newname,
-      Shutdown,
-      Restart,
-      Peer,
-      PeerStatus,
-      Time,
-      Exten,
-      Address,
-      Port,
-      Privilege,
-      SentPackets,
-      ReceivedPackets,
-      LostPackets,
-      Jitter,
-      Transit,
-      RRCount,
-      SRCount,
-      RTT,
-      OldAccountCode,
-      CID_CallingPres,
-      ChannelType,
-      ChannelState,
-      ChannelStateDesc,
-      CallerIDNum,
-      AccountCode,
-      ActionID,
-      Variable,
-      Value,
-      HoldTime,
-      OriginalPosition,
-      Context,
-      OurSSRC,
-      SentNTP,
-      SentRTP,
-      SentOctets,
-      Status,
-      Reason,
-      Bridgetype,
-      CallerID1,
-      CallerID2,
-      DialStatus,
-      FractionLost,
-      CumulativeLoss,
-      IAJitter,
-      TheirLastSR,
-      DLSR,
-      RTCPSent,
-      ReportBlock,
-      SubEvent,
-      Dialstring,
-      Env
-     );
-
-   subtype AMI_Header_Key_Type is AMI_Key_Type range Event .. Response;
+   subtype AMI_Header_Key_Type is Events range Event .. Response;
    --  Only these are allowed as headers
 
    BAD_LINE_FORMAT : exception;
@@ -188,7 +36,7 @@ package AMI.Parser is
    --  Raised when a malformatted line is encountered by the parser
 
    type Pair_Type is record
-      Key   : AMI_Key_Type;
+      Key   : AMI.Packet_Keys.Events;
       Value : Unbounded_String;
    end record;
 
@@ -210,14 +58,14 @@ package AMI.Parser is
       Value => Null_Unbounded_String);
 
    function Hash_Function
-     (Key  : in AMI_Key_Type)
+     (Key  : in AMI.Packet_Keys.Events)
       return Ada.Containers.Hash_Type;
    function Hash_Equivalent_Keys
-     (Left, Right : in AMI_Key_Type)
+     (Left, Right : in AMI.Packet_Keys.Events)
       return        Boolean;
 
    package Pair_List_Type is new Ada.Containers.Hashed_Maps (
-      Key_Type        => AMI_Key_Type,
+      Key_Type        => AMI.Packet_Keys.Events,
       Element_Type    => Unbounded_String,
       Hash            => Hash_Function,
       Equivalent_Keys => Hash_Equivalent_Keys);
@@ -230,17 +78,17 @@ package AMI.Parser is
    --  Conveniently return the Action_ID of a packet without the cast.
 
    function Get_Value (Packet   : in Packet_Type;
-                       Key      : in AMI_Key_Type;
+                       Key      : in AMI.Packet_Keys.Events;
                        Required : in Boolean := True) return String;
    --  Extracts a value from a packet. Raises exception when the Required flag
    --  is set and a value is not found for the key.
 
    function Get_Value (Packet   : in Packet_Type;
-                       Key      : in AMI_Key_Type;
+                       Key      : in AMI.Packet_Keys.Events;
                        Required : in Boolean := True) return Unbounded_String;
 
    function Has_Value (Packet   : in Packet_Type;
-                       Key      : in AMI_Key_Type) return Boolean;
+                       Key      : in AMI.Packet_Keys.Events) return Boolean;
 
    function Header (Packet : in Packet_Type) return Pair_Type;
    --  returns the entire header key/value pair.

@@ -16,6 +16,7 @@
 -------------------------------------------------------------------------------
 
 with Ada.Calendar.Formatting;
+with AMI.Packet_Keys;
 
 package body AMI.Channel is
    use type Channel_ID.Instance;
@@ -174,17 +175,18 @@ package body AMI.Channel is
 
    procedure Change_State (Channel :    out Instance;
                            Packet  : in     AMI.Parser.Packet_Type) is
+      use AMI.Packet_Keys;
    begin
       Channel.State :=
-        To_Channel_State (Packet.Get_Value (AMI.Parser.ChannelState));
+        To_Channel_State (Packet.Get_Value (ChannelState));
       Channel.Caller_ID_Number :=
-        Packet.Get_Value (AMI.Parser.CallerIDNum);
+        Packet.Get_Value (CallerIDNum);
       Channel.Caller_ID_Name :=
-        Packet.Get_Value (AMI.Parser.CallerIDName);
+        Packet.Get_Value (CallerIDName);
       Channel.Connected_Line_Number :=
-        Packet.Get_Value (AMI.Parser.ConnectedLineNum);
+        Packet.Get_Value (ConnectedLineNum);
       Channel.Connected_Line_Name :=
-        Packet.Get_Value (AMI.Parser.ConnectedLineName);
+        Packet.Get_Value (ConnectedLineName);
    end Change_State;
 
    --------------
@@ -193,6 +195,7 @@ package body AMI.Channel is
 
    function Create (Packet : in AMI.Parser.Packet_Type) return Instance is
       use Ada.Calendar;
+      use AMI.Packet_Keys;
 
       Bridged_Channel   : Channel_ID.Instance    := Channel_ID.Empty_Channel;
       Bridged_Unique_ID : AMI.Unique_ID.Instance :=
@@ -203,77 +206,77 @@ package body AMI.Channel is
       Extension         : US.Unbounded_String    := US.Null_Unbounded_String;
    begin
       if not
-        Channel_ID.Validate (Packet.Get_Value (AMI.Parser.Channel))
+        Channel_ID.Validate (Packet.Get_Value (AMI.Packet_Keys.Channel))
       then
          return Null_Object;
       end if;
 
-      if Packet.Get_Value (Key      => AMI.Parser.BridgedChannel,
+      if Packet.Get_Value (Key      => BridgedChannel,
                           Required => False) /= ""
       then
          Bridged_Channel := Channel_ID.Value
-           (Packet.Get_Value (AMI.Parser.BridgedChannel));
+           (Packet.Get_Value (BridgedChannel));
       end if;
 
-      if Packet.Get_Value (Key      => AMI.Parser.BridgedUniqueID,
+      if Packet.Get_Value (Key      => BridgedUniqueID,
                            Required => False) /= ""
       then
          Bridged_Unique_ID := AMI.Unique_ID.Value
-           (Packet.Get_Value (AMI.Parser.BridgedUniqueID));
+           (Packet.Get_Value (BridgedUniqueID));
       end if;
 
       --  Horribly inconsistant naming conflict fix. Sometimes
       --  the packet has a field named exten, and sometimes extension..
-      if Packet.Has_Value (AMI.Parser.Exten) then
-         Extension := Packet.Get_Value (AMI.Parser.Exten);
-      elsif Packet.Has_Value (AMI.Parser.Extension) then
-         Extension := Packet.Get_Value (AMI.Parser.Extension);
+      if Packet.Has_Value (Exten) then
+         Extension := Packet.Get_Value (Exten);
+      elsif Packet.Has_Value (AMI.Packet_Keys.Extension) then
+         Extension := Packet.Get_Value (AMI.Packet_Keys.Extension);
       end if;
 
-      if Packet.Has_Value (AMI.Parser.Duration) then
+      if Packet.Has_Value (AMI.Packet_Keys.Duration) then
          Time_Active := Ada.Calendar.Formatting.Value
-           (Elapsed_Time => Packet.Get_Value (AMI.Parser.Duration));
+           (Elapsed_Time => Packet.Get_Value (AMI.Packet_Keys.Duration));
 
          Created_At := Created_At - Time_Active;
       end if;
 
-      if Packet.Get_Value (AMI.Parser.ChannelState, False) /= "" then
-         Priority :=
-           Natural'Value (Packet.Get_Value (AMI.Parser.ChannelState, False));
+      if Packet.Get_Value (AMI.Packet_Keys.ChannelState, False) /= "" then
+         Priority := Natural'Value
+           (Packet.Get_Value (AMI.Packet_Keys.ChannelState, False));
       end if;
 
       return
         (Is_Null               => False,
          ID                    =>
-           Channel_ID.Value (Packet.Get_Value (AMI.Parser.Channel)),
+           Channel_ID.Value (Packet.Get_Value (AMI.Packet_Keys.Channel)),
          Bridged_With          =>
            Bridged_Channel,
          State                 =>
-           To_Channel_State (Packet.Get_Value (AMI.Parser.ChannelState)),
+           To_Channel_State (Packet.Get_Value (AMI.Packet_Keys.ChannelState)),
          Priority              =>
            Priority,
          Caller_ID_Number      =>
-           Packet.Get_Value (AMI.Parser.CallerIDNum),
+           Packet.Get_Value (AMI.Packet_Keys.CallerIDNum),
          Caller_ID_Name        =>
-           Packet.Get_Value (AMI.Parser.CallerIDName),
+           Packet.Get_Value (AMI.Packet_Keys.CallerIDName),
          Connected_Line_Number =>
-           Packet.Get_Value (AMI.Parser.ConnectedLineNum, False),
+           Packet.Get_Value (AMI.Packet_Keys.ConnectedLineNum, False),
          Connected_Line_Name   =>
-           Packet.Get_Value (AMI.Parser.ConnectedLineName, False),
+           Packet.Get_Value (AMI.Packet_Keys.ConnectedLineName, False),
          Account_Code          =>
-           Packet.Get_Value (AMI.Parser.AccountCode),
+           Packet.Get_Value (AMI.Packet_Keys.AccountCode),
          Application           =>
-           Packet.Get_Value (AMI.Parser.Application, False),
+           Packet.Get_Value (AMI.Packet_Keys.Application, False),
          Application_Data      =>
-           Packet.Get_Value (AMI.Parser.ApplicationData, False),
+           Packet.Get_Value (AMI.Packet_Keys.ApplicationData, False),
          Unique_ID             =>
-           AMI.Unique_ID.Value (Packet.Get_Value (AMI.Parser.UniqueID)),
+           AMI.Unique_ID.Value (Packet.Get_Value (AMI.Packet_Keys.UniqueID)),
          Bridged_Unique_ID     =>
            Bridged_Unique_ID,
          Extension             =>
            Extension,
          Context               =>
-           Packet.Get_Value (AMI.Parser.Context),
+           Packet.Get_Value (AMI.Packet_Keys.Context),
          Created_At            => Created_At,
          Variable              => Variable_Storage.Empty_Map);
    end Create;

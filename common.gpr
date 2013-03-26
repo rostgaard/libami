@@ -1,29 +1,9 @@
--------------------------------------------------------------------------------
---                                                                           --
---  This is free software;  you can redistribute it and/or modify it         --
---  under terms of the  GNU General Public License  as published by the      --
---  Free Software  Foundation;  either version 3,  or (at your  option) any  --
---  later version. This library is distributed in the hope that it will be   --
---  useful, but WITHOUT ANY WARRANTY;  without even the implied warranty of  --
---  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                     --
---  You should have received a copy of the GNU General Public License and    --
---  a copy of the GCC Runtime Library Exception along with this program;     --
---  see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see    --
---  <http://www.gnu.org/licenses/>.                                          --
---                                                                           --
--------------------------------------------------------------------------------
-
-
---  with "ami";
-
-project Tests is
+project Common is
    type Build_Type is ("Debug", "Production");
    Build : Build_Type := External ("BUILDTYPE", "Production");
 
-   Source_Options := ("src/tests", "src");
+   Source_Options := ("src/**");
    for Source_Dirs use Source_Options;
-
-   for Main use ("client_scope.adb");
 
    for Exec_Dir use ".";
 
@@ -46,22 +26,26 @@ project Tests is
                                               "-gnatf",
                                               "-gnato",
                                               "-gnatwa",
---                                              "-gnaty3abcdefhiklmnoprstux",
+                                              "-gnaty3abcdefhiklmnoprstux",
                                               "-Wall",
                                               "-O2",
-                                              "-gnat2005");
+                                              "-gnat2012");
          when "Debug" =>
             for Default_Switches ("Ada") use ("-fstack-check",
+                                              "-gnatA",
                                               "-gnata",
                                               "-gnatf",
                                               "-gnato",
                                               "-gnatwa",
                                               "-gnatVa",
+                                              "-gnatVn",
+                                              "-gnatE",
                                               "-Wall",
                                               "-O1",
-                                              "-gnat2005",
+                                              "-gnat12",
                                               "-g");
 
       end case;
    end Compiler;
-end Tests;
+end Common;
+

@@ -16,6 +16,7 @@
 -------------------------------------------------------------------------------
 
 with AMI.Trace;
+with AMI.Client.Tasking;
 
 package body AMI.Observers is
    use AMI.Trace;

@@ -37,7 +37,7 @@ package body AMI.Parser is
    -----------------
 
    function Get_Value (Packet   : in Packet_Type;
-                       Key      : in AMI_Key_Type;
+                       Key      : in AMI.Packet_Keys.Events;
                        Required : in Boolean := True) return String is
    begin
       return To_String (Packet.Get_Value (Key, Required));
@@ -48,7 +48,7 @@ package body AMI.Parser is
    -----------------
 
    function Get_Value (Packet   : in Packet_Type;
-                       Key      : in AMI_Key_Type;
+                       Key      : in AMI.Packet_Keys.Events;
                        Required : in Boolean := True)
                        return Unbounded_String is
    begin
@@ -71,7 +71,7 @@ package body AMI.Parser is
    -----------------
 
    function Has_Value (Packet   : in Packet_Type;
-                       Key      : in AMI_Key_Type) return Boolean is
+                       Key      : in AMI.Packet_Keys.Events) return Boolean is
    begin
       return Packet.Fields.Contains (Key);
    end Has_Value;
@@ -80,7 +80,7 @@ package body AMI.Parser is
    --  Hash_Equivalent_Keys  --
    ----------------------------
 
-   function Hash_Equivalent_Keys (Left, Right : in AMI_Key_Type)
+   function Hash_Equivalent_Keys (Left, Right : in AMI.Packet_Keys.Events)
                                   return Boolean is
    begin
       return Left = Right;
@@ -90,11 +90,11 @@ package body AMI.Parser is
    --  Hash_Function  --
    ---------------------
 
-   function Hash_Function (Key : in AMI_Key_Type)
+   function Hash_Function (Key : in AMI.Packet_Keys.Events)
                            return Ada.Containers.Hash_Type
    is
    begin
-      return AMI_Key_Type'Pos (Key);
+      return AMI.Packet_Keys.Events'Pos (Key);
    end Hash_Function;
 
    --------------
@@ -160,7 +160,7 @@ package body AMI.Parser is
 
    function Image (Item : in Pair_Type) return String is
    begin
-      return "[" & AMI_Key_Type'Image (Item.Key) &
+      return "[" & AMI.Packet_Keys.Events'Image (Item.Key) &
         "] => [" & To_String (Item.Value) & "]";
    end Image;
 
@@ -178,7 +178,7 @@ package body AMI.Parser is
         (Source  => Line,
          Pattern => Key_Value_Seperator);
       Key_Length     : Natural;
-      Key            : AMI_Key_Type;
+      Key            : AMI.Packet_Keys.Events;
    begin
       --  Special cases
       if Line'Length = 0 then
@@ -195,7 +195,7 @@ package body AMI.Parser is
       --  This one really isn't needed, but improves readability of
       --  the source code - hopefully.
       Key_Length := Seperator_Index - Key_Value_Seperator'Length - 1;
-      Key        := AMI_Key_Type'Value
+      Key        := AMI.Packet_Keys.Events'Value
         (Translate (Source  => Line (Line'First .. Line'First + Key_Length),
                     Mapping => Underscore_Map));
 

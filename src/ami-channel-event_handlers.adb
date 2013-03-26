@@ -20,6 +20,8 @@ with AMI.Event;
 with AMI.Observers;
 with AMI.Trace;
 
+with AMI.Packet_Keys;
+
 package body AMI.Channel.Event_Handlers is
    use AMI;
    use AMI.Trace;
@@ -54,15 +56,17 @@ package body AMI.Channel.Event_Handlers is
    -----------------------
 
    procedure Attach_Variable (Packet : in Parser.Packet_Type) is
+      use AMI.Packet_Keys;
+
       Context        : constant String  := Package_Name & ".Attach_Variable";
       Channel_Key    : US.Unbounded_String renames
-                         Packet.Get_Value (Parser.Channel);
+                         Packet.Get_Value (AMI.Packet_Keys.Channel);
       Target_Channel : Channel.Instance := Channel.Empty_Object;
    begin
       Target_Channel := Channel.List.Get (Channel_Key);
 
-      Target_Channel.Add_Variable (Packet.Get_Value (Parser.Variable),
-                                   Packet.Get_Value (Parser.Value));
+      Target_Channel.Add_Variable (Packet.Get_Value (Variable),
+                                   Packet.Get_Value (Value));
 
       Channel.List.Update (Key  => Channel_Key,
                            Item => Target_Channel);
@@ -75,8 +79,8 @@ package body AMI.Channel.Event_Handlers is
       when others =>
          AMI.Trace.Error
            ("Failed to add [" &
-              Packet.Get_Value (Parser.Variable) & "] => [" &
-              Packet.Get_Value (Parser.Value)    & "]" &
+              Packet.Get_Value (Variable) & "] => [" &
+              Packet.Get_Value (Value)    & "]" &
               " to channel " & US.To_String (Channel_Key), Context);
          raise;
    end Attach_Variable;
@@ -86,12 +90,13 @@ package body AMI.Channel.Event_Handlers is
    ------------------
 
    procedure Masquerade (Packet : in Parser.Packet_Type) is
+      use AMI.Packet_Keys;
       Context      : constant String  := Package_Name & ".Masquerade";
 
       Clone_Key    : US.Unbounded_String renames
-                       Packet.Get_Value (Parser.Clone);
+                       Packet.Get_Value (Clone);
       Original_Key : US.Unbounded_String renames
-                       Packet.Get_Value (Parser.Original);
+                       Packet.Get_Value (Original);
       Clone        : Channel.Instance := Channel.Empty_Object;
       Original     : Channel.Instance := Channel.Empty_Object;
 
@@ -104,8 +109,8 @@ package body AMI.Channel.Event_Handlers is
       Channel.List.Update (Key  => Original_Key,
                            Item => Clone);
       AMI.Trace.Debug ("Cloning channel " &
-                       Packet.Get_Value (Parser.Clone) & " to " &
-                         Packet.Get_Value (Parser.Original),
+                       Packet.Get_Value (AMI.Packet_Keys.Clone) & " to " &
+                         Packet.Get_Value (AMI.Packet_Keys.Original),
                        Context);
    end Masquerade;
 
@@ -114,14 +119,15 @@ package body AMI.Channel.Event_Handlers is
    ------------------------
 
    procedure New_Account_Code (Packet : in Parser.Packet_Type) is
+      use AMI.Packet_Keys;
       Context          : constant String := Package_Name & ".New_Account_Code";
       Target_Channel   : Channel.Instance := Channel.Empty_Object;
       New_Account_Code : String renames
-                           Packet.Get_Value (Parser.AccountCode);
+                           Packet.Get_Value (AccountCode);
       Old_Account_Code : String renames
-                           Packet.Get_Value (Parser.OldAccountCode);
+                           Packet.Get_Value (OldAccountCode);
       Channel_Key      : US.Unbounded_String renames
-                           Packet.Get_Value (Parser.Channel);
+                           Packet.Get_Value (AMI.Packet_Keys.Channel);
    begin
       if New_Account_Code /= Old_Account_Code then
          AMI.Trace.Debug ("No value changed - ignoring", Context);
@@ -140,7 +146,7 @@ package body AMI.Channel.Event_Handlers is
    exception
       when Channel.Not_Found =>
          AMI.Trace.Error ("Channel not found: " &
-                            Packet.Get_Value (Parser.Channel),
+                            Packet.Get_Value (AMI.Packet_Keys.Channel),
                           Context);
          raise;
    end New_Account_Code;
@@ -151,14 +157,16 @@ package body AMI.Channel.Event_Handlers is
 
    procedure New_Caller_ID (Packet : in Parser.Packet_Type) is
       use Ada.Strings.Unbounded;
+      use AMI.Packet_Keys;
+
       Context              : constant String  :=
                                Package_Name & ".New_Caller_ID";
       New_Caller_ID_Name   : Unbounded_String renames
-                               Packet.Get_Value (Parser.CallerIDName);
+                               Packet.Get_Value (CallerIDName);
       New_Caller_ID_Number : Unbounded_String renames
-                               Packet.Get_Value (Parser.CallerIDNum);
+                               Packet.Get_Value (CallerIDNum);
       Channel_Key          : Unbounded_String renames
-                               Packet.Get_Value (Parser.Channel);
+                               Packet.Get_Value (AMI.Packet_Keys.Channel);
       Target_Channel       : Channel.Instance := Channel.Empty_Object;
    begin
       Target_Channel := Channel.List.Get (Channel_Key);
@@ -192,14 +200,14 @@ package body AMI.Channel.Event_Handlers is
       Context              : constant String  :=
                                Package_Name & ".New_Channel";
       Channel_Key          : Unbounded_String renames
-                               Packet.Get_Value (Parser.Channel);
+                               Packet.Get_Value (AMI.Packet_Keys.Channel);
    begin
       AMI.Trace.Debug
         (To_String (Channel_Key), Context);
       AMI.Trace.Debug
         ("Inserting " &
            To_String (Channel_Key), Context);
-      Channel.List.Insert (Packet.Get_Value (Parser.Channel),
+      Channel.List.Insert (Packet.Get_Value (AMI.Packet_Keys.Channel),
             Channel.Create (Packet => Packet));
    end New_Channel;
 
@@ -212,13 +220,13 @@ package body AMI.Channel.Event_Handlers is
       Context          : constant String := Package_Name & ".New_Extension";
       Target_Channel   : Channel.Instance := Channel.Empty_Object;
       Application      : US.Unbounded_String renames
-                           Packet.Get_Value (Parser.Application);
+                           Packet.Get_Value (AMI.Packet_Keys.Application);
       Application_Data : US.Unbounded_String renames
-                           Packet.Get_Value (Parser.AppData);
+                           Packet.Get_Value (AMI.Packet_Keys.AppData);
       Channel_Key      : US.Unbounded_String renames
-                           Packet.Get_Value (Parser.Channel);
+                           Packet.Get_Value (AMI.Packet_Keys.Channel);
       New_Extension    : US.Unbounded_String renames
-                           Packet.Get_Value (Parser.Extension);
+                           Packet.Get_Value (AMI.Packet_Keys.Extension);
    begin
       Target_Channel := Channel.List.Get (Channel_Key);
 
@@ -254,13 +262,13 @@ package body AMI.Channel.Event_Handlers is
       Context           : constant String  := Package_Name & ".New_State";
       Channel_To_Change : Channel.Instance := Channel.Empty_Object;
       Channel_Key       : US.Unbounded_String renames
-                            Packet.Get_Value (Parser.Channel);
+                            Packet.Get_Value (AMI.Packet_Keys.Channel);
    begin
 
       AMI.Trace.Debug
         ("Updating channel "
          & To_String (Channel_Key) & " with new state "
-         & Packet.Get_Value (Parser.ChannelStateDesc), Context);
+         & Packet.Get_Value (AMI.Packet_Keys.ChannelStateDesc), Context);
 
       Channel_To_Change := Channel.List.Get (Channel_Key);
 
@@ -317,7 +325,8 @@ package body AMI.Channel.Event_Handlers is
 
    procedure Rename (Packet : in Parser.Packet_Type) is
    begin
-      Channel.List.Rename (Old_Name => Packet.Get_Value (Parser.Channel),
-                           New_Name => Packet.Get_Value (Parser.Newname));
+      Channel.List.Rename
+        (Old_Name => Packet.Get_Value (AMI.Packet_Keys.Channel),
+         New_Name => Packet.Get_Value (AMI.Packet_Keys.Newname));
    end Rename;
 end AMI.Channel.Event_Handlers;

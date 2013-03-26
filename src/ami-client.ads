@@ -39,10 +39,9 @@ package AMI.Client is
    --  Silently ignore connection state changes.
 
    type Instance is tagged limited private;
-   type Reference is access all Instance;
    --  This is the actual client instance.
 
-   procedure Connect (Client   : access Instance;
+   procedure Connect (Client   : in out Instance;
                       Hostname : in     String;
                       Port     : in     Natural);
 
@@ -50,22 +49,22 @@ package AMI.Client is
 
    function Get_Line (Client : in Instance) return String;
 
-   procedure Send (Client : access Instance;
+   procedure Send (Client : in Instance;
                    Item   : in String);
    --  Send an abitrary string. Use this as a last resort, as most should be
    --  available through AMI.Packet.Action.
 
-   procedure Send (Client : access Instance;
+   procedure Send (Client : in Instance;
                    Item   : in AMI.Packet.Action.Request);
    --  Primary send function.
 
-   function Send (Client : access Instance;
+   function Send (Client : in Instance;
                   Item   : in AMI.Packet.Action.Request)
                      return AMI.Parser.Packet_Type;
    --  Synchronous version of send operation. Uses an internal buffer to
    --  achieve synchronous operation.
 
-   procedure Send (Client : access Instance;
+   procedure Send (Client : in Instance;
                    Item   : in AMI.AMI_Packet);
    --  Alternate Send operation - marked for removal.
    pragma Obsolescent (Send, "Please use the primary send instead");
@@ -75,7 +74,7 @@ package AMI.Client is
 
    function Connected (Client : in Instance) return Boolean;
 
-   procedure Wait_For_Connection (Client  : access Instance;
+   procedure Wait_For_Connection (Client  : in Instance;
                                   Timeout : in     Duration := 3.0);
    --  Waits for a client to establish a connection for duration.
    --  Raises TIMEOUT if the connection is not established within the
@@ -91,7 +90,7 @@ private
 
    type Instance_Handle is new Natural range 1 .. 10;
 
-   type Rerefence is access Instance;
+   type Reference is access Instance;
 
    function Create return Reference;
 

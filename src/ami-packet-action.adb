@@ -21,6 +21,8 @@ with Ada.Strings;
 with Ada.Strings.Fixed;
 with Ada.Characters.Handling;
 
+with AMI.Packet_Keys;
+
 package body AMI.Packet.Action is
    use Ada.Strings;
    use Ada.Strings.Fixed;
@@ -30,7 +32,7 @@ package body AMI.Packet.Action is
    use AMI.Parser;
 
    procedure Add_Field (List  : in out AMI.Packet_Field.Field_List.List;
-                        Key   : in     AMI.Parser.AMI_Key_Type;
+                        Key   : in     AMI.Packet_Keys.Events;
                         Value : in     String);
    --  Small wrapper function that cuts down on implementation code.
 
@@ -58,12 +60,12 @@ package body AMI.Packet.Action is
       Timeout_Milli_Seconds : constant Natural := Natural (Timeout * 1_000);
    begin
       Add_Field (List  => Fields,
-                 Key   => AMI.Parser.Channel,
+                 Key   => AMI.Packet_Keys.Channel,
                  Value => Channel);
 
       if Timeout > Duration'First then
          Add_Field (List  => Fields,
-                    Key   => AMI.Parser.Timeout,
+                    Key   => AMI.Packet_Keys.Timeout,
                     Value => Trim (Natural'Image (Timeout_Milli_Seconds),
                       Both));
       end if;
@@ -97,7 +99,7 @@ package body AMI.Packet.Action is
    ---------------
 
    procedure Add_Field (List  : in out AMI.Packet_Field.Field_List.List;
-                        Key   : in     AMI.Parser.AMI_Key_Type;
+                        Key   : in     AMI.Packet_Keys.Events;
                         Value : in     String) is
    begin
       List.Append (AMI.Packet_Field.Create (Key   => Key,
@@ -118,11 +120,11 @@ package body AMI.Packet.Action is
                  AMI.Packet_Field.Field_List.Empty_List;
    begin
       Add_Field (List  => Fields,
-                 Key   => AMI.Parser.Agent,
+                 Key   => AMI.Packet_Keys.Agent,
                  Value => Agent);
       if Soft then
          Add_Field (List  => Fields,
-                    Key   => AMI.Parser.Soft,
+                    Key   => AMI.Packet_Keys.Soft,
                     Value => Trim (Soft'Img, Left));
       end if;
       return Action.Create (Action      => AgentLogoff,
@@ -156,15 +158,15 @@ package body AMI.Packet.Action is
                  AMI.Packet_Field.Field_List.Empty_List;
    begin
       Add_Field (List  => Fields,
-                 Key   => AMI.Parser.Channel,
+                 Key   => AMI.Packet_Keys.Channel,
                  Value => Channel);
 
       Add_Field (List  => Fields,
-                 Key   => AMI.Parser.Command,
+                 Key   => AMI.Packet_Keys.Command,
                  Value => Command);
 
       Add_Field (List  => Fields,
-                 Key   => AMI.Parser.CommandID,
+                 Key   => AMI.Packet_Keys.CommandID,
                  Value => CommandID);
 
       return Action.Create (Action      => AGI,
@@ -189,19 +191,19 @@ package body AMI.Packet.Action is
                  AMI.Packet_Field.Field_List.Empty_List;
    begin
       Add_Field (List  => Fields,
-                 Key   => AMI.Parser.Channel,
+                 Key   => AMI.Packet_Keys.Channel,
                  Value => Channel);
 
       Add_Field (List  => Fields,
-                 Key   => AMI.Parser.Exten,
+                 Key   => AMI.Packet_Keys.Exten,
                  Value => Extension);
 
       Add_Field (List  => Fields,
-                 Key   => AMI.Parser.Context,
+                 Key   => AMI.Packet_Keys.Context,
                  Value => Context);
 
       Add_Field (List  => Fields,
-                 Key   => AMI.Parser.Priority,
+                 Key   => AMI.Packet_Keys.Priority,
                  Value => Priority'Img);
 
       return Action.Create (Action      => Atxfer,
@@ -224,20 +226,20 @@ package body AMI.Packet.Action is
                  AMI.Packet_Field.Field_List.Empty_List;
    begin
       Add_Field (List  => Fields,
-                 Key   => AMI.Parser.Channel1,
+                 Key   => AMI.Packet_Keys.Channel1,
                  Value => Channel1);
 
       Add_Field (List  => Fields,
-                 Key   => AMI.Parser.Channel2,
+                 Key   => AMI.Packet_Keys.Channel2,
                  Value => Channel2);
 
       if Tone then
          Add_Field (List  => Fields,
-                    Key   => AMI.Parser.Tone,
+                    Key   => AMI.Packet_Keys.Tone,
                     Value => "yes");
       else
          Add_Field (List  => Fields,
-                    Key   => AMI.Parser.Tone,
+                    Key   => AMI.Packet_Keys.Tone,
                     Value => "no");
       end if;
 
@@ -260,7 +262,7 @@ package body AMI.Packet.Action is
                  AMI.Packet_Field.Field_List.Empty_List;
    begin
       Add_Field (List  => Fields,
-                 Key   => AMI.Parser.AuthType,
+                 Key   => AMI.Packet_Keys.AuthType,
                  Value => To_Lower (Authentication_Type'Img));
 
       return Action.Create (Action      => Valid_Action'(Challenge),
@@ -282,11 +284,11 @@ package body AMI.Packet.Action is
                  AMI.Packet_Field.Field_List.Empty_List;
    begin
       Add_Field (List  => Fields,
-                 Key   => AMI.Parser.Channel,
+                 Key   => AMI.Packet_Keys.Channel,
                  Value => Channel);
 
       Add_Field (List  => Fields,
-                 Key   => AMI.Parser.File,
+                 Key   => AMI.Packet_Keys.File,
                  Value => File);
 
       return Action.Create (Action      => Valid_Action'(ChangeMonitor),
@@ -308,7 +310,7 @@ package body AMI.Packet.Action is
                  AMI.Packet_Field.Field_List.Empty_List;
    begin
       Add_Field (List  => Fields,
-                 Key   => AMI.Parser.Command,
+                 Key   => AMI.Packet_Keys.Command,
                  Value => In_Command);
 
       return Action.Create (Action      => Valid_Action'(Command),
@@ -392,8 +394,9 @@ package body AMI.Packet.Action is
       Fields : AMI.Packet_Field.Field_List.List :=
                  AMI.Packet_Field.Field_List.Empty_List;
    begin
-      Fields.Append (AMI.Packet_Field.Create (Key   => AMI.Parser.Filename,
-                                              Value => Filename));
+      Fields.Append
+        (AMI.Packet_Field.Create (Key   => AMI.Packet_Keys.Filename,
+                                  Value => Filename));
 
       return Action.Create (Action      => CreateConfig,
                             Fields      => Fields,
@@ -409,7 +412,7 @@ package body AMI.Packet.Action is
       Fields : AMI.Packet_Field.Field_List.List :=
                  AMI.Packet_Field.Field_List.Empty_List;
    begin
-      Fields.Append (AMI.Packet_Field.Create (Key   => AMI.Parser.Channel,
+      Fields.Append (AMI.Packet_Field.Create (Key   => AMI.Packet_Keys.Channel,
                                               Value => Channel));
 
       return Action.Create (Action      => Hangup,
@@ -432,11 +435,11 @@ package body AMI.Packet.Action is
                  AMI.Packet_Field.Field_List.Empty_List;
    begin
       Fields.Append (AMI.Packet_Field.Create
-                     (Key   => AMI.Parser.Username,
+                     (Key   => AMI.Packet_Keys.Username,
                       Value => Username));
 
       Fields.Append (AMI.Packet_Field.Create
-                     (Key   => AMI.Parser.Secret,
+                     (Key   => AMI.Packet_Keys.Secret,
                       Value => Secret));
 
       return Action.Create (Action      => Login,
@@ -477,47 +480,47 @@ package body AMI.Packet.Action is
    begin
       --  Required fields.
       Fields.Append (AMI.Packet_Field.Create
-                     (Key   => AMI.Parser.Channel,
+                     (Key   => AMI.Packet_Keys.Channel,
                       Value => Channel));
 
       Fields.Append (AMI.Packet_Field.Create
-                     (Key   => AMI.Parser.Exten,
+                     (Key   => AMI.Packet_Keys.Exten,
                       Value => Extension));
 
       Fields.Append (AMI.Packet_Field.Create
-                     (Key   => AMI.Parser.Context,
+                     (Key   => AMI.Packet_Keys.Context,
                       Value => Context));
 
       Fields.Append (AMI.Packet_Field.Create
-                     (Key   => AMI.Parser.Priority,
+                     (Key   => AMI.Packet_Keys.Priority,
                       Value => Trim (Priority'Img, Left)));
 
       Fields.Append (AMI.Packet_Field.Create
-                     (Key   => AMI.Parser.Timeout,
+                     (Key   => AMI.Packet_Keys.Timeout,
                       Value => Trim
                         (Natural'Image (Timeout_Milli_Seconds), Left)));
 
       if CallerID /= "" then
          Fields.Append (AMI.Packet_Field.Create
-                        (Key   => AMI.Parser.CallerID,
+                        (Key   => AMI.Packet_Keys.CallerID,
                          Value => CallerID));
       end if;
 
       if Variable /= "" then
          Fields.Append (AMI.Packet_Field.Create
-                        (Key   => AMI.Parser.Variable,
+                        (Key   => AMI.Packet_Keys.Variable,
                          Value => Variable));
       end if;
 
       if Account /= "" then
          Fields.Append (AMI.Packet_Field.Create
-                        (Key   => AMI.Parser.Account,
+                        (Key   => AMI.Packet_Keys.Account,
                          Value => Account));
       end if;
 
       if Codecs /= "" then
          Fields.Append (AMI.Packet_Field.Create
-                        (Key   => AMI.Parser.Codecs,
+                        (Key   => AMI.Packet_Keys.Codecs,
                          Value => Codecs));
       end if;
 
@@ -543,21 +546,21 @@ package body AMI.Packet.Action is
                                 AMI.Packet_Field.Field_List.Empty_List;
    begin
       Fields.Append (AMI.Packet_Field.Create
-                     (Key   => AMI.Parser.Channel,
+                     (Key   => AMI.Packet_Keys.Channel,
                       Value => Channel));
 
       Fields.Append (AMI.Packet_Field.Create
-                     (Key   => AMI.Parser.Channel2,
+                     (Key   => AMI.Packet_Keys.Channel2,
                       Value => Channel2));
 
       Fields.Append (AMI.Packet_Field.Create
-                     (Key   => AMI.Parser.Timeout,
+                     (Key   => AMI.Packet_Keys.Timeout,
                       Value => Trim
                         (Natural'Image (Timeout_Milli_Seconds), Left)));
 
       if Parkinglot /= "" then
          Fields.Append (AMI.Packet_Field.Create
-                        (Key   => AMI.Parser.ParkingLot,
+                        (Key   => AMI.Packet_Keys.ParkingLot,
                          Value => Parkinglot));
       end if;
 
@@ -599,43 +602,43 @@ package body AMI.Packet.Action is
 
       --  Required fields.
       Fields.Append (AMI.Packet_Field.Create
-                     (Key   => AMI.Parser.Channel,
+                     (Key   => AMI.Packet_Keys.Channel,
                       Value => Channel));
 
       Fields.Append (AMI.Packet_Field.Create
-                     (Key   => AMI.Parser.Exten,
+                     (Key   => AMI.Packet_Keys.Exten,
                       Value => Extension));
 
       Fields.Append (AMI.Packet_Field.Create
-                     (Key   => AMI.Parser.Context,
+                     (Key   => AMI.Packet_Keys.Context,
                       Value => Context));
 
       Fields.Append (AMI.Packet_Field.Create
-                     (Key   => AMI.Parser.Priority,
+                     (Key   => AMI.Packet_Keys.Priority,
                       Value => Trim (Priority'Img, Left)));
 
       --  Optional fields.
       if Extra_Channel /= "" then
          Fields.Append (AMI.Packet_Field.Create
-                        (Key   => AMI.Parser.ExtraChannel,
+                        (Key   => AMI.Packet_Keys.ExtraChannel,
                          Value => Extra_Channel));
       end if;
 
       if Extra_Extension /= "" then
          Fields.Append (AMI.Packet_Field.Create
-                        (Key   => AMI.Parser.ExtraExten,
+                        (Key   => AMI.Packet_Keys.ExtraExten,
                       Value => Extra_Extension));
       end if;
 
       if Extra_Context /= "" then
          Fields.Append (AMI.Packet_Field.Create
-                        (Key   => AMI.Parser.ExtraContext,
+                        (Key   => AMI.Packet_Keys.ExtraContext,
                          Value => Extra_Context));
       end if;
 
       if Extra_Priority /= Natural'Last then
          Fields.Append (AMI.Packet_Field.Create
-                     (Key   => AMI.Parser.ExtraPriority,
+                     (Key   => AMI.Packet_Keys.ExtraPriority,
                       Value => Trim (Extra_Priority'Img, Left)));
       end if;
 
@@ -673,6 +676,7 @@ package body AMI.Packet.Action is
    function To_AMI_Packet
      (R : in Request) return AMI_Packet is
       use Field_List;
+      use AMI.Packet_Keys;
 
       Buffer : Unbounded_String :=
                  To_Unbounded_String
@@ -764,7 +768,7 @@ package body AMI.Packet.Action is
       Timeout_Milli_Seconds : constant Natural := Natural (Timeout * 1_000);
    begin
       Add_Field (List  => Fields,
-                 Key   => AMI.Parser.Timeout,
+                 Key   => AMI.Packet_Keys.Timeout,
                  Value => Trim (Natural'Image (Timeout_Milli_Seconds),
                    Both));
 

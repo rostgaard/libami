@@ -19,6 +19,7 @@ with Ada.Calendar;
 with Ada.Strings.Unbounded;
 
 with AMI.Trace;
+with AMI.Packet_Keys;
 
 package body AMI.Response is
    use AMI;
@@ -69,7 +70,8 @@ package body AMI.Response is
       Key      : Action_ID_Type  := Null_Action_ID;
    begin
 
-      Key := Action_ID_Type'Value (Packet.Get_Value (AMI.Parser.ActionID));
+      Key :=
+        Action_ID_Type'Value (Packet.Get_Value (AMI.Packet_Keys.ActionID));
       AMI.Trace.Debug (Message => "Dispatching" & Key'Img,
                        Context => Context,
                        Level   => 20);
