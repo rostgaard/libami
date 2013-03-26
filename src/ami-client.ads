@@ -23,10 +23,8 @@ with GNAT.Sockets;
 
 with AMI.Packet.Action;
 with AMI.Parser;
-with AMI.Observers;
 
 package AMI.Client is
-   use AMI.Observers;
 
    Package_Name       : constant String := "AMI.Client";
 
@@ -80,6 +78,8 @@ package AMI.Client is
    --  Raises TIMEOUT if the connection is not established within the
    --  given duration.
 
+      type Reference is access Instance;
+
 private
 
    function Read_Packet (Client : access AMI.Client.Instance)
@@ -89,8 +89,6 @@ private
    Ignore_Event : constant Connection_Event_Handler := Ignore'Access;
 
    type Instance_Handle is new Natural range 1 .. 10;
-
-   type Reference is access Instance;
 
    function Create return Reference;
 
@@ -106,7 +104,6 @@ private
          Channel               : GNAT.Sockets.Stream_Access := null;
          On_Connect_Handler    : Connection_Event_Handler := Ignore_Event;
          On_Disconnect_Handler : Connection_Event_Handler := Ignore_Event;
-         Event_Observers       : Event_Listeners;
       end record;
 
    overriding procedure Initialize (Obj : in out Instance);

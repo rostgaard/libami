@@ -64,8 +64,10 @@ package body AMI.Client is
 
       AMI.Trace.Information ("Connected to " &
                                Hostname & ":" &
-                               Positive'Image (Port),
+                               Positive'Image (Port) & " with greeting " &
+                               To_String (Client.Server_Greeting),
                              Context);
+
    exception
       when E : GNAT.Sockets.Socket_Error =>
          --  Synchronize the state

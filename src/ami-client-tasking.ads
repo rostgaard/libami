@@ -1,14 +1,19 @@
 with AMI.Packet.Action;
 with AMI.Event;
+with AMI.Parser;
 
 package AMI.Client.Tasking is
    task type Instance;
 
    function Create return Instance;
 
+   type Client_Event_Callback is
+     access procedure (Client : in AMI.Client.Reference;
+                       Packet : in AMI.Parser.Packet_Type);
+
    procedure Subscribe (Obj     : in Instance;
                         Event   : in AMI.Event.Event_Type;
-                        Handler : in AMI.Event.Event_Callback);
+                        Handler : in Client_Event_Callback);
 
    procedure Unsubscribe is null;
 

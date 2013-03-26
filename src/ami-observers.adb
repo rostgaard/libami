@@ -16,7 +16,6 @@
 -------------------------------------------------------------------------------
 
 with AMI.Trace;
-with AMI.Client.Tasking;
 
 package body AMI.Observers is
    use AMI.Trace;
@@ -27,9 +26,8 @@ package body AMI.Observers is
    --  Notify  --
    --------------
 
-   procedure Notify (Listeners : in Event_Listeners;
-                     Event     : in AMI.Event.Event_Type;
-                     Packet    : in AMI.Parser.Packet_Type) is
+   procedure Notify (Event  : in AMI.Event.Event_Type;
+                     Packet : in AMI.Parser.Packet_Type) is
       Context : constant String := Package_Name & ".Notify";
       use Callback_Collections;
 
@@ -41,34 +39,12 @@ package body AMI.Observers is
       end Call;
 
    begin
-      if Listeners (Event).Is_Empty then
+      if Global_Callbacks (Event).Is_Empty then
          AMI.Trace.Debug ("Nobody cared about event " & Event'Img, Context);
       end if;
 
-      Listeners (Event).Iterate (Process => Call'Access);
+      Global_Callbacks (Event).Iterate (Process => Call'Access);
    end Notify;
-
-   procedure Notify (Event  : in AMI.Event.Event_Type;
-                     Packet : in AMI.Parser.Packet_Type) is
-   begin
-      Notify (Global_Callbacks, Event, Packet);
-   end Notify;
-
-   ----------------
-   --  Register  --
-   ----------------
-
-   procedure Register (Listeners :    out Event_Listeners;
-                       Event     : in     AMI.Event.Event_Type;
-                       Handler   : in     AMI.Event.Event_Callback) is
-      Context : constant String := Package_Name & ".Register";
-   begin
-      AMI.Trace.Debug (Message => "Registering handler for " & Event'Img,
-                       Context => Context);
-      if not Listeners (Event).Contains (Handler) then
-         Listeners (Event).Append (Handler);
-      end if;
-   end Register;
 
    ----------------
    --  Register  --
@@ -77,9 +53,10 @@ package body AMI.Observers is
    procedure Register (Event   : in AMI.Event.Event_Type;
                        Handler : in AMI.Event.Event_Callback) is
    begin
-      Register (Listeners => Global_Callbacks,
-                Event     => Event,
-                Handler   => Handler);
+      if not Global_Callbacks (Event).Contains (Handler) then
+         Global_Callbacks (Event).Append (Handler);
+      end if;
+
    end Register;
 
 end AMI.Observers;
